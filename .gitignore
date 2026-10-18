@@ -1,0 +1,11 @@
+﻿.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.log
+*.apk
+*.aab
+*.keystore
+Thumbs.db

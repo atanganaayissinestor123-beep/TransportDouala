@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:TransportDouala.ViewModels" xmlns:m="clr-namespace:TransportDouala.Models" xmlns:ctl="clr-namespace:TransportDouala.Controls" xmlns:draw="clr-namespace:TransportDouala.Drawing" x:Class="TransportDouala.Views.FavoritesPage" x:DataType="vm:FavoritesViewModel">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,28" Spacing="14">
+            <Label Text="Mes favoris" Style="{StaticResource Title}" />
+
+            <Label Text="Aucun favori pour le moment. Appuyez sur ☆ depuis un résultat ou le détail d'une ligne pour en ajouter."
+                   Style="{StaticResource Muted}" FontSize="15" IsVisible="{Binding IsEmpty}" />
+
+            <VerticalStackLayout Spacing="12" IsVisible="{Binding HasLines}">
+                <Label Text="Lignes favorites" Style="{StaticResource H2}" />
+                <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Lines}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FavoriteLineItem">
+                            <Border Style="{StaticResource Card}">
+                                <VerticalStackLayout Spacing="6">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="17" VerticalOptions="Center" />
+                                        <Label Grid.Column="1" Text="★" FontSize="28" TextColor="{StaticResource Primary}" Padding="10,0,0,0">
+                                            <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding RemoveCommand}" /></Label.GestureRecognizers>
+                                        </Label>
+                                    </Grid>
+                                    <Label Text="{Binding Direction}" />
+                                    <Label Text="{Binding FareText}" Style="{StaticResource Muted}" />
+                                </VerticalStackLayout>
+                                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}" /></Border.GestureRecognizers>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="12" IsVisible="{Binding HasRoutes}" Margin="0,8,0,0">
+                <Label Text="Itinéraires favoris" Style="{StaticResource H2}" />
+                <VerticalStackLayout Spacing="14" BindableLayout.ItemsSource="{Binding Routes}"
+                                     BindableLayout.ItemTemplate="{StaticResource RouteCardTemplate}" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

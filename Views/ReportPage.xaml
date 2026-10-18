@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:TransportDouala.ViewModels" xmlns:m="clr-namespace:TransportDouala.Models" xmlns:ctl="clr-namespace:TransportDouala.Controls" xmlns:draw="clr-namespace:TransportDouala.Drawing" x:Class="TransportDouala.Views.ReportPage" x:DataType="vm:ReportViewModel">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,28" Spacing="14">
+            <Label Text="Signaler un tarif" Style="{StaticResource Title}" />
+            <Label Text="Aidez-nous à améliorer les informations tarifaires." Style="{StaticResource Muted}" FontSize="16" />
+
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Ligne" FontAttributes="Bold" />
+                <Border Style="{StaticResource FieldBorder}">
+                    <Picker Title="Choisir une ligne" ItemsSource="{Binding LineNames}" SelectedItem="{Binding SelectedLineName, Mode=TwoWay}" />
+                </Border>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Trajet" FontAttributes="Bold" />
+                <Border Style="{StaticResource FieldBorder}">
+                    <Picker Title="Choisir un trajet" ItemsSource="{Binding Directions}" SelectedItem="{Binding SelectedDirection, Mode=TwoWay}" />
+                </Border>
+            </VerticalStackLayout>
+
+            <ctl:FormField Title="Tarif constaté" Placeholder="Ex : 300" Suffix="FCFA" InputKeyboard="Numeric"
+                           Text="{Binding FareText, Mode=TwoWay}" ErrorText="{Binding FareError}" />
+
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Date" FontAttributes="Bold" />
+                <Border Style="{StaticResource FieldBorder}">
+                    <DatePicker Date="{Binding ReportDate, Mode=TwoWay}" MaximumDate="{Binding Today}" Format="dd/MM/yyyy" />
+                </Border>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="6">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Commentaire" FontAttributes="Bold" />
+                    <Label Grid.Column="1" Text="Optionnel" Style="{StaticResource Muted}" />
+                </Grid>
+                <Border Style="{StaticResource FieldBorder}" Padding="10,4">
+                    <Editor Placeholder="Précisez le contexte du trajet..." HeightRequest="90" Text="{Binding Comment, Mode=TwoWay}" />
+                </Border>
+            </VerticalStackLayout>
+
+            <Border IsVisible="{Binding HasSuccess}" Style="{StaticResource Chip}" BackgroundColor="{StaticResource SuccessBg}">
+                <Label Text="{Binding SuccessMessage}" TextColor="{StaticResource Success}" />
+            </Border>
+            <Border IsVisible="{Binding HasFailure}" Style="{StaticResource Chip}" BackgroundColor="{StaticResource DangerBg}">
+                <Label Text="{Binding FailureMessage}" TextColor="{StaticResource Danger}" />
+            </Border>
+
+            <Button Text="{Binding ButtonText}" Style="{StaticResource PrimaryButton}" Command="{Binding SubmitCommand}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Primary}" HeightRequest="24" />
+            <Label Text="Votre signalement aide à estimer les tarifs moyens. Il ne fixe pas le prix d'un trajet." Style="{StaticResource Muted}" FontSize="13" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

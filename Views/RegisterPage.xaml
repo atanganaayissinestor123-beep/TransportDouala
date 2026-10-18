@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:TransportDouala.ViewModels" xmlns:m="clr-namespace:TransportDouala.Models" xmlns:ctl="clr-namespace:TransportDouala.Controls" xmlns:draw="clr-namespace:TransportDouala.Drawing" x:Class="TransportDouala.Views.RegisterPage" x:DataType="vm:RegisterViewModel">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,20" Spacing="16">
+            <Label Style="{StaticResource BackArrow}">
+                <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding GoBackCommand}" /></Label.GestureRecognizers>
+            </Label>
+            <Label Text="Créer votre compte" Style="{StaticResource Title}" />
+            <Label Text="Enregistrez vos itinéraires et lignes favorites." Style="{StaticResource Muted}" FontSize="16" />
+
+            <ctl:FormField Title="Nom complet" Placeholder="Votre nom et prénom" Text="{Binding FullName, Mode=TwoWay}" ErrorText="{Binding NameError}" />
+            <ctl:FormField Title="Adresse e-mail" Placeholder="exemple@email.com" InputKeyboard="Email" Text="{Binding Email, Mode=TwoWay}" ErrorText="{Binding EmailError}" />
+            <ctl:FormField Title="Mot de passe" Placeholder="8 caractères minimum" IsPassword="True" Text="{Binding Password, Mode=TwoWay}" ErrorText="{Binding PasswordError}" />
+            <ctl:FormField Title="Confirmer le mot de passe" Placeholder="Saisissez à nouveau votre mot de passe" IsPassword="True" Text="{Binding Confirm, Mode=TwoWay}" ErrorText="{Binding ConfirmError}" />
+
+            <HorizontalStackLayout Spacing="6">
+                <CheckBox IsChecked="{Binding Accepted, Mode=TwoWay}" Color="{StaticResource Primary}" VerticalOptions="Center" />
+                <Label Text="J'accepte les conditions d'utilisation" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Button Text="{Binding ButtonText}" Style="{StaticResource PrimaryButton}" Command="{Binding RegisterCommand}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Primary}" HeightRequest="24" />
+
+            <Label Text="Déjà un compte ? Se connecter" TextColor="{StaticResource Primary}" FontAttributes="Bold" HorizontalOptions="Center">
+                <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding GoBackCommand}" /></Label.GestureRecognizers>
+            </Label>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

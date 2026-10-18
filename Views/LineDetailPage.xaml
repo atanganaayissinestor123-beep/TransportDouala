@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:TransportDouala.ViewModels" xmlns:m="clr-namespace:TransportDouala.Models" xmlns:ctl="clr-namespace:TransportDouala.Controls" xmlns:draw="clr-namespace:TransportDouala.Drawing" x:Class="TransportDouala.Views.LineDetailPage" x:DataType="vm:LineDetailViewModel">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,20" Spacing="14">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Style="{StaticResource BackArrow}">
+                    <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding GoBackCommand}" /></Label.GestureRecognizers>
+                </Label>
+                <Label Grid.Column="1" Text="{Binding StarGlyph}" FontSize="30" TextColor="{StaticResource Primary}"
+                       IsVisible="{Binding IsFound}" Padding="12,0,0,0">
+                    <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding ToggleFavoriteCommand}" /></Label.GestureRecognizers>
+                </Label>
+            </Grid>
+
+            <Label Text="Ligne introuvable. Revenez en arrière et relancez la recherche." Style="{StaticResource Muted}" FontSize="16"
+                   IsVisible="{Binding IsNotFound}" />
+
+            <VerticalStackLayout Spacing="14" IsVisible="{Binding IsFound}">
+                <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="30" />
+                <Label Text="{Binding Subtitle}" FontSize="17" />
+
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Tarif moyen" Style="{StaticResource Muted}" />
+                        <Label Text="{Binding FareText}" FontSize="28" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                    <Label Text="Arrêts de la ligne" Style="{StaticResource H2}" />
+                    <Label Grid.Column="1" Text="{Binding StopsHeader}" Style="{StaticResource Muted}" VerticalOptions="Center" />
+                </Grid>
+                <Label Text="{Binding DirectionText}" Style="{StaticResource Muted}" FontSize="13" />
+
+                <VerticalStackLayout Margin="6,0,0,0" BindableLayout.ItemsSource="{Binding Stops}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:StopItem">
+                            <Grid ColumnDefinitions="32,*" HeightRequest="44">
+                                <BoxView WidthRequest="3" HorizontalOptions="Center" Margin="{Binding LineMargin}" Color="{StaticResource BorderColor}" />
+                                <Border WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center"
+                                        StrokeShape="RoundRectangle 8" StrokeThickness="2.5"
+                                        BackgroundColor="{Binding DotFill}" Stroke="{Binding DotStroke}" />
+                                <Label Grid.Column="1" Text="{Binding Name}" FontSize="16" VerticalOptions="Center"
+                                       FontAttributes="{Binding NameAttributes}" TextColor="{Binding NameColor}" />
+                            </Grid>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <Button Text="Signaler un tarif" Style="{StaticResource PrimaryButton}" Command="{Binding ReportFareCommand}" Margin="0,12,0,0" />
+                <Label Text="Tarifs indicatifs issus des signalements, et non des prix réglementaires." Style="{StaticResource Muted}" FontSize="13" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

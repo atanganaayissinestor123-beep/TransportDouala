@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:vm="clr-namespace:TransportDouala.ViewModels">
+
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}" />
+
+    <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
+        <Setter Property="BackgroundColor" Value="{StaticResource Background}" />
+        <Setter Property="Shell.NavBarIsVisible" Value="False" />
+    </Style>
+
+    <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+        <Setter Property="FontSize" Value="15" />
+    </Style>
+    <Style x:Key="Title" TargetType="Label">
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontAttributes" Value="Bold" />
+    </Style>
+    <Style x:Key="H2" TargetType="Label">
+        <Setter Property="FontSize" Value="19" />
+        <Setter Property="FontAttributes" Value="Bold" />
+    </Style>
+    <Style x:Key="Muted" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style x:Key="BackArrow" TargetType="Label">
+        <Setter Property="Text" Value="←" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="Padding" Value="0,4,16,4" />
+    </Style>
+
+    <Style TargetType="Entry">
+        <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource TextMuted}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style TargetType="Editor">
+        <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource TextMuted}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style TargetType="Picker">
+        <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+        <Setter Property="TitleColor" Value="{StaticResource TextMuted}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style TargetType="DatePicker">
+        <Setter Property="TextColor" Value="{StaticResource TextMain}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <Style x:Key="PrimaryButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="HeightRequest" Value="52" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource Disabled}" />
+                            <Setter Property="TextColor" Value="{StaticResource White}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+    <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+        <Setter Property="TextColor" Value="{StaticResource Primary}" />
+        <Setter Property="BorderColor" Value="{StaticResource BorderColor}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="HeightRequest" Value="46" />
+    </Style>
+
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+        <Setter Property="Stroke" Value="{StaticResource BorderBrush}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="16" />
+        </Setter>
+    </Style>
+    <Style x:Key="FieldBorder" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+        <Setter Property="Stroke" Value="{StaticResource BorderBrush}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="MinimumHeightRequest" Value="52" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="12" />
+        </Setter>
+    </Style>
+    <Style x:Key="Chip" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource Chip}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="8" />
+        </Setter>
+    </Style>
+
+    <!-- Composant réutilisable : carte d'itinéraire (Résultats + Favoris) -->
+    <DataTemplate x:Key="RouteCardTemplate" x:DataType="vm:ResultItemViewModel">
+        <Border Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="{Binding RouteLabel}" IsVisible="{Binding ShowRoute}" Style="{StaticResource Muted}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="{Binding LineTitle}" FontAttributes="Bold" FontSize="17" VerticalOptions="Center" />
+                    <Label Grid.Column="1" Text="{Binding StarGlyph}" FontSize="28" Padding="10,0,0,0"
+                           TextColor="{StaticResource Primary}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ToggleFavoriteCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+                <HorizontalStackLayout Spacing="14">
+                    <Label Text="{Binding DurationText}" FontSize="28" FontAttributes="Bold" />
+                    <Label Text="{Binding StopsText}" VerticalOptions="End" Margin="0,0,0,4" />
+                </HorizontalStackLayout>
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Tarif moyen :" Style="{StaticResource Muted}" VerticalOptions="Center" />
+                    <Border Grid.Column="1" Style="{StaticResource Chip}">
+                        <Label Text="{Binding FareText}" TextColor="{StaticResource Primary}" FontAttributes="Bold" />
+                    </Border>
+                </Grid>
+                <Button Text="Voir le trajet" Style="{StaticResource SecondaryButton}" Command="{Binding OpenLineCommand}" />
+            </VerticalStackLayout>
+        </Border>
+    </DataTemplate>
+</ResourceDictionary>
