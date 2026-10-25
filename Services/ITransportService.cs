@@ -2,14 +2,21 @@ using TransportDouala.Models;
 
 namespace TransportDouala.Services;
 
-/// <summary>Contrat d'accès aux données. Implémentation actuelle : simulée. Future : SQLite.</summary>
 public interface ITransportService
 {
     IReadOnlyList<BusLine> GetLines();
     BusLine? GetLine(int id);
-    IReadOnlyList<string> RecentDestinations { get; }
-    IReadOnlyList<NearbyStop> GetNearbyStops();
+
+    /// <summary>Suggestions d'arrêts (autocomplétion) pour un texte saisi.</summary>
+    IReadOnlyList<string> SuggestStops(string query, int max = 8);
+    /// <summary>Nom d'arrêt officiel correspondant au texte saisi, ou null.</summary>
     string? ResolveStop(string query);
-    Task<IReadOnlyList<RouteOption>> SearchRoutesAsync(string? from, string to);
+
+    IReadOnlyList<NearbyStop> GetNearbyStops(GeoPoint position, int max = 6);
+    Task<IReadOnlyList<RouteOption>> SearchRoutesAsync(string? from, string to, GeoPoint? position);
+
+    IReadOnlyList<string> GetRecentDestinations();
+    void AddRecentDestination(string name);
+
     Task<bool> AddFareReportAsync(FareReport report);
 }

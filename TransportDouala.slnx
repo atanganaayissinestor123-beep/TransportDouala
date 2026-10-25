@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="TransportDouala.csproj" />
+  <Project Path="TransportDouala.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
 </Solution>

@@ -5,6 +5,9 @@
             <Label Text="Signaler un tarif" Style="{StaticResource Title}" />
             <Label Text="Aidez-nous à améliorer les informations tarifaires." Style="{StaticResource Muted}" FontSize="16" />
 
+            <ctl:FormField Title="Rechercher une ligne" Placeholder="Ex : Ndokoti, Akwa, Taxi 5, Bus 133"
+                           Text="{Binding LineFilter, Mode=TwoWay}" />
+
             <VerticalStackLayout Spacing="6">
                 <Label Text="Ligne" FontAttributes="Bold" />
                 <Border Style="{StaticResource FieldBorder}">

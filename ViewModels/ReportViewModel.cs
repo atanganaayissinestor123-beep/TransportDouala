@@ -8,18 +8,20 @@ namespace TransportDouala.ViewModels;
 public partial class ReportViewModel : BaseViewModel, IQueryAttributable
 {
     readonly ITransportService _transport;
+    readonly Dictionary<string, BusLine> _byLabel = new();
+    List<string> _allLabels = new();
 
     public ReportViewModel(ITransportService transport)
     {
         _transport = transport;
-        LineNames = transport.GetLines().Select(l => l.Name).ToList();
-        SelectedLineName = LineNames.FirstOrDefault();
+        Rebuild();
     }
 
-    public List<string> LineNames { get; }
     public DateTime Today => DateTime.Today;
 
+    [ObservableProperty] private List<string> lineNames = new();
     [ObservableProperty] private string? selectedLineName;
+    [ObservableProperty] private string lineFilter = "";
     [ObservableProperty] private List<string> directions = new();
     [ObservableProperty] private string? selectedDirection;
     [ObservableProperty, NotifyCanExecuteChangedFor(nameof(SubmitCommand))] private string fareText = "";
@@ -33,8 +35,28 @@ public partial class ReportViewModel : BaseViewModel, IQueryAttributable
     public bool HasFailure => !string.IsNullOrEmpty(FailureMessage);
     public string ButtonText => IsBusy ? "Envoi..." : "Envoyer le signalement";
 
-    BusLine? CurrentLine() =>
-        SelectedLineName is { Length: > 6 } n && int.TryParse(n[6..], out var id) ? _transport.GetLine(id) : null;
+    static string Label(BusLine l) => $"{l.Name} · {l.RouteName}";
+
+    void Rebuild()
+    {
+        _byLabel.Clear();
+        foreach (var l in _transport.GetLines()) _byLabel[Label(l)] = l;
+        _allLabels = _byLabel.Keys.ToList();
+        ApplyFilter();
+    }
+
+    void ApplyFilter()
+    {
+        var keep = SelectedLineName;
+        var q = StopMatcher.Norm(LineFilter);
+        var list = q.Length == 0 ? _allLabels : _allLabels.Where(x => StopMatcher.Norm(x).Contains(q)).ToList();
+        LineNames = list;
+        SelectedLineName = keep != null && list.Contains(keep) ? keep : list.FirstOrDefault();
+    }
+
+    partial void OnLineFilterChanged(string value) => ApplyFilter();
+
+    BusLine? CurrentLine() => SelectedLineName != null && _byLabel.TryGetValue(SelectedLineName, out var l) ? l : null;
 
     partial void OnSelectedLineNameChanged(string? value)
     {
@@ -48,7 +70,10 @@ public partial class ReportViewModel : BaseViewModel, IQueryAttributable
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (!query.TryGetValue("lineId", out var v)) return;
-        SelectedLineName = $"Ligne {Convert.ToInt32(v)}";
+        var line = _transport.GetLine(Convert.ToInt32(v));
+        if (line is null) return;
+        LineFilter = "";
+        SelectedLineName = Label(line);
         if (query.TryGetValue("direction", out var d) && d?.ToString() is { } dir && Directions.Contains(dir))
             SelectedDirection = dir;
         SuccessMessage = ""; FailureMessage = "";
@@ -75,8 +100,8 @@ public partial class ReportViewModel : BaseViewModel, IQueryAttributable
         if (ok)
         {
             FareText = ""; Comment = ""; ReportDate = DateTime.Today;
-            SuccessMessage = "Merci ! Votre signalement a été enregistré.";
+            SuccessMessage = $"Merci ! Signalement enregistré. Tarif moyen de {line.Name} : {line.AverageFare} FCFA.";
         }
-        else FailureMessage = "L'envoi a échoué. Réessayez.";
+        else FailureMessage = "L'enregistrement a échoué. Réessayez.";
     }
 }

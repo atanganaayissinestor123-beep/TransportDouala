@@ -20,9 +20,9 @@ public partial class ResultItemViewModel : ObservableObject
     public RouteOption Option { get; }
     public bool ShowRoute { get; }
     public string RouteLabel => $"{Option.FromLabel} → {Option.ToLabel}";
-    public string LineTitle => $"🚌  {Option.Line.Name}";
+    public string LineTitle => $"{(Option.Line.IsTaxi ? "🚕" : "🚌")}  {Option.Line.Name}";
     public string DurationText => $"{Option.Minutes} min";
-    public string StopsText => $"{Option.StopCount} arrêts";
+    public string StopsText => Option.WalkMeters > 0 ? $"{Option.StopCount} arrêts · départ à {Option.WalkMeters} m" : $"{Option.StopCount} arrêts";
     public string FareText => $"{Option.Fare} FCFA";
     public string StarGlyph => IsFavorite ? "★" : "☆";
 

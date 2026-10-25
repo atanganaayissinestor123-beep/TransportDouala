@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using TransportDouala.Data;
 using TransportDouala.Services;
 using TransportDouala.ViewModels;
 using TransportDouala.Views;
@@ -12,10 +13,14 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();   // polices système (Roboto) : aucune police embarquée
 
-        // Services (en mémoire pour l'instant ; SQLite viendra remplacer les implémentations)
-        builder.Services.AddSingleton<ITransportService, MockTransportService>();
-        builder.Services.AddSingleton<FavoritesService>();
+        // Données et services
+        builder.Services.AddSingleton<AppDatabase>();
         builder.Services.AddSingleton<AuthService>();
+        builder.Services.AddSingleton<TransportService>();
+        builder.Services.AddSingleton<ITransportService>(sp => sp.GetRequiredService<TransportService>());
+        builder.Services.AddSingleton<FavoritesService>();
+        builder.Services.AddSingleton<LocationService>();
+        builder.Services.AddSingleton<AppInitializer>();
 
         // ViewModels + Pages
         builder.Services.AddTransient<LoginViewModel>();
@@ -43,10 +48,22 @@ public static class MauiProgram
         Microsoft.Maui.Handlers.EditorHandler.Mapper.AppendToMapping("NoUnderline", (h, v) => clear(h.PlatformView));
         Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("NoUnderline", (h, v) => clear(h.PlatformView));
         Microsoft.Maui.Handlers.DatePickerHandler.Mapper.AppendToMapping("NoUnderline", (h, v) => clear(h.PlatformView));
+
+        // La carte garde le geste : glisser un doigt dessus déplace la carte et ne fait pas défiler la page
+        Microsoft.Maui.Handlers.WebViewHandler.Mapper.AppendToMapping("MapTouch", (h, v) =>
+        {
+            h.PlatformView.Touch += (s, e) =>
+            {
+                var action = e.Event?.Action;
+                if (action == Android.Views.MotionEventActions.Down || action == Android.Views.MotionEventActions.Move)
+                    h.PlatformView.Parent?.RequestDisallowInterceptTouchEvent(true);
+                e.Handled = false;
+            };
+        });
 #endif
 #if DEBUG
         builder.Logging.AddDebug();
- #endif
+#endif
         return builder.Build();
     }
 }

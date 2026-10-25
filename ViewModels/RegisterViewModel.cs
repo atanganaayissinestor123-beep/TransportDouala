@@ -7,7 +7,8 @@ namespace TransportDouala.ViewModels;
 public partial class RegisterViewModel : BaseViewModel
 {
     readonly AuthService _auth;
-    public RegisterViewModel(AuthService auth) => _auth = auth;
+    readonly AppInitializer _init;
+    public RegisterViewModel(AuthService auth, AppInitializer init) { _auth = auth; _init = init; }
 
     [ObservableProperty, NotifyCanExecuteChangedFor(nameof(RegisterCommand))] private string fullName = "";
     [ObservableProperty, NotifyCanExecuteChangedFor(nameof(RegisterCommand))] private string email = "";
@@ -41,9 +42,15 @@ public partial class RegisterViewModel : BaseViewModel
         if (NameError + EmailError + PasswordError + ConfirmError != "") return;
 
         IsBusy = true; OnPropertyChanged(nameof(ButtonText));
-        var ok = await _auth.RegisterAsync(FullName.Trim(), Email.Trim(), Password);
-        IsBusy = false; OnPropertyChanged(nameof(ButtonText));
-        if (!ok) { EmailError = "Un compte existe déjà avec cette adresse."; return; }
-        await Shell.Current.GoToAsync("//main/home");
+        try
+        {
+            await _init.EnsureAsync();
+            var ok = await _auth.RegisterAsync(FullName.Trim(), Email.Trim(), Password);
+            if (!ok) { EmailError = "Un compte existe déjà avec cette adresse."; return; }
+            FullName = ""; Email = ""; Password = ""; Confirm = ""; Accepted = false;
+            await Shell.Current.GoToAsync("//main/home");
+        }
+        catch (Exception ex) { EmailError = "Erreur : " + ex.Message; }
+        finally { IsBusy = false; OnPropertyChanged(nameof(ButtonText)); }
     }
 }

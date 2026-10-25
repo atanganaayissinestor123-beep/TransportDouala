@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:vm="clr-namespace:TransportDouala.ViewModels" xmlns:m="clr-namespace:TransportDouala.Models" xmlns:ctl="clr-namespace:TransportDouala.Controls" xmlns:draw="clr-namespace:TransportDouala.Drawing" x:Class="TransportDouala.Views.HomePage" x:DataType="vm:HomeViewModel">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:TransportDouala.ViewModels"
+             xmlns:m="clr-namespace:TransportDouala.Models"
+             x:Class="TransportDouala.Views.HomePage" x:DataType="vm:HomeViewModel">
     <ScrollView>
         <VerticalStackLayout Padding="20,28" Spacing="16">
             <Label Text="Bonjour 👋" Style="{StaticResource Title}" FontSize="30" />
@@ -13,31 +17,83 @@
                 </Grid>
             </Border>
 
-            <Border Style="{StaticResource Card}" Padding="0" HeightRequest="230">
+            <!-- Carte interactive (en ligne) ou schéma (hors connexion) -->
+            <Border Style="{StaticResource Card}" Padding="0" HeightRequest="340">
                 <Grid>
-                    <GraphicsView x:Name="MapView">
-                        <GraphicsView.Drawable><draw:MapDrawable /></GraphicsView.Drawable>
-                    </GraphicsView>
+                    <WebView x:Name="WebMap" IsVisible="False" Navigating="OnWebNavigating" Navigated="OnWebNavigated" />
+                    <GraphicsView x:Name="OfflineMap" IsVisible="False" />
                     <Border Style="{StaticResource Chip}" BackgroundColor="White" HorizontalOptions="Start" VerticalOptions="Start" Margin="10">
                         <Label Text="●  Votre position" FontSize="13" />
+                        <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnMeChipTapped" /></Border.GestureRecognizers>
                     </Border>
-                    <Border BackgroundColor="White" Stroke="{StaticResource BorderBrush}" WidthRequest="44" HeightRequest="44"
-                            HorizontalOptions="End" VerticalOptions="End" Margin="10" StrokeShape="RoundRectangle 10">
-                        <Label Text="◎" FontSize="22" TextColor="{StaticResource Primary}" HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Border BackgroundColor="White" Stroke="{StaticResource BorderBrush}" WidthRequest="46" HeightRequest="46"
+                            HorizontalOptions="End" VerticalOptions="End" Margin="10,10,10,34" StrokeShape="RoundRectangle 12">
+                        <Label Text="◎" FontSize="24" TextColor="{StaticResource Primary}" HorizontalOptions="Center" VerticalOptions="Center" />
                         <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnLocateTapped" /></Border.GestureRecognizers>
                     </Border>
                 </Grid>
             </Border>
-            <Label Text="Carte et données illustratives · position simulée, non fiable pour la géolocalisation." Style="{StaticResource Muted}" FontSize="13" />
+            <Label Text="{Binding LocationNote}" Style="{StaticResource Muted}" FontSize="13" />
+
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <Border Style="{StaticResource Chip}">
+                    <Label Text="{Binding PickButtonText}" TextColor="{StaticResource Primary}" FontAttributes="Bold" FontSize="14" />
+                    <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding TogglePickCommand}" /></Border.GestureRecognizers>
+                </Border>
+                <Label Grid.Column="1" Text="Position automatique" TextColor="{StaticResource Primary}" FontAttributes="Bold" FontSize="14"
+                       VerticalOptions="Center" IsVisible="{Binding IsManualPosition}">
+                    <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding UseAutoPositionCommand}" /></Label.GestureRecognizers>
+                </Label>
+            </Grid>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Primary}" HeightRequest="24" />
+
+            <!-- Fiche « Votre position » -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding IsMeSelected}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Votre position" Style="{StaticResource Muted}" />
+                    <Label Text="{Binding PositionText}" FontAttributes="Bold" FontSize="19" />
+                    <Label Text="{Binding LocationNote}" Style="{StaticResource Muted}" />
+                    <Label Text="{Binding NearestText}" />
+                    <Button Text="Chercher un itinéraire depuis ici" Style="{StaticResource PrimaryButton}" Command="{Binding SearchFromHereCommand}" Margin="0,6,0,0" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Fiche de l'arrêt sélectionné -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasSelectedStop}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Arrêt sélectionné" Style="{StaticResource Muted}" />
+                    <Label Text="{Binding SelectedName}" FontAttributes="Bold" FontSize="19" />
+                    <Label Text="{Binding SelectedInfo}" Style="{StaticResource Muted}" />
+                    <Label Text="Lignes qui passent ici (touchez pour voir le détail)" Style="{StaticResource Muted}" FontSize="13" Margin="0,6,0,0" />
+                    <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding SelectedLines}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="m:NearbyLine">
+                                <Border Style="{StaticResource Chip}" Padding="12,10">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                        <Label Text="{Binding Code}" FontAttributes="Bold" TextColor="{StaticResource Primary}" VerticalOptions="Center" />
+                                        <Label Grid.Column="1" Text="{Binding RouteName}" FontSize="14" VerticalOptions="Center" LineBreakMode="TailTruncation" />
+                                        <Label Grid.Column="2" Text="{Binding FareText}" FontSize="13" TextColor="{StaticResource TextMuted}" VerticalOptions="Center" />
+                                    </Grid>
+                                    <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnLineTapped" /></Border.GestureRecognizers>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <Button Text="Aller à cet arrêt" Style="{StaticResource PrimaryButton}" Command="{Binding GoToSelectedStopCommand}" Margin="0,6,0,0" />
+                    <Button Text="Je suis à cet arrêt" Style="{StaticResource SecondaryButton}" Command="{Binding UseSelectedStopAsPositionCommand}" />
+                </VerticalStackLayout>
+            </Border>
 
             <Label Text="Arrêts à proximité" Style="{StaticResource H2}" Margin="0,8,0,0" />
-            <Label Text="Aucun arrêt à proximité pour le moment." Style="{StaticResource Muted}" IsVisible="{Binding HasNoNearby}" />
+            <Label Text="Aucun arrêt à moins de 2 km. Utilisez la recherche pour trouver un itinéraire."
+                   Style="{StaticResource Muted}" IsVisible="{Binding ShowNoNearby}" />
             <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding NearbyStops}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="m:NearbyStop">
                         <Border Style="{StaticResource Card}" Padding="14">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                                <Label Text="🚌" FontSize="22" VerticalOptions="Center" />
+                                <Label Text="🚏" FontSize="22" VerticalOptions="Center" />
                                 <VerticalStackLayout Grid.Column="1" Spacing="2">
                                     <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="16" />
                                     <Label Text="{Binding Info}" Style="{StaticResource Muted}" />
@@ -49,6 +105,10 @@
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
             </VerticalStackLayout>
+
+            <Label Text="Se déconnecter" TextColor="{StaticResource Primary}" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,16,0,0">
+                <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding LogoutCommand}" /></Label.GestureRecognizers>
+            </Label>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

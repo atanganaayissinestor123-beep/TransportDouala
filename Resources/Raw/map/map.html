@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>{{MAPLIBRE_CSS}}</style>
+<style>
+  html, body, #map { height: 100%; margin: 0; background: #EAF0F4; font-family: Roboto, "Segoe UI", sans-serif; }
+  .maplibregl-ctrl-group { border-radius: 12px; box-shadow: 0 2px 8px rgba(17,27,46,.25); }
+  .maplibregl-ctrl-group button { width: 36px; height: 36px; }
+  .stop { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 3px solid #17407A; box-sizing: border-box;
+          display: flex; align-items: center; justify-content: center; font-size: 14px; line-height: 1; cursor: pointer;
+          box-shadow: 0 2px 8px rgba(17,27,46,.3); transition: transform .15s; }
+  .stop.sel { background: #17407A; transform: scale(1.3); }
+  .me { width: 18px; height: 18px; border-radius: 50%; background: #17407A; border: 3px solid #fff; cursor: pointer;
+        box-shadow: 0 0 0 0 rgba(23,64,122,.5); animation: pulse 2s infinite; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 20px rgba(23,64,122,0); } 100% { box-shadow: 0 0 0 0 rgba(23,64,122,0); } }
+  .maplibregl-popup-content { border-radius: 10px; padding: 8px 12px; font-size: 13px; color: #111B2E;
+                              box-shadow: 0 2px 8px rgba(17,27,46,.25); pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>{{MAPLIBRE_JS}}</script>
+<script>
+  function go(url) { window.location.href = url; }
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
+
+  var map = null, me = null, markers = [], inner = [], stops = [], bounds = null;
+  var popup = null, picking = false, mapLoaded = false, accData = null;
+  var emptyFC = { type: 'FeatureCollection', features: [] };
+
+  try {
+    map = new maplibregl.Map({ container: 'map', style: '{{STYLE_URL}}', center: [9.7424, 4.0417], zoom: 14, attributionControl: false });
+    map.addControl(new maplibregl.AttributionControl({ compact: true }));
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 22 });
+
+    // cercle de précision de la position
+    map.on('load', function () {
+      mapLoaded = true;
+      map.addSource('acc', { type: 'geojson', data: emptyFC });
+      map.addLayer({ id: 'acc-fill', type: 'fill', source: 'acc', paint: { 'fill-color': '#17407A', 'fill-opacity': 0.12 } });
+      map.addLayer({ id: 'acc-line', type: 'line', source: 'acc', paint: { 'line-color': '#17407A', 'line-width': 1.5, 'line-opacity': 0.5 } });
+      if (accData) setAcc(accData);
+    });
+
+    // mode « placer ma position » : un toucher sur la carte envoie les coordonnées à l'application
+    map.on('click', function (e) {
+      if (picking) go('tdapp://pos/' + e.lngLat.lat.toFixed(6) + '/' + e.lngLat.lng.toFixed(6));
+    });
+  } catch (e) {
+    go('tdapp://nowebgl');   // WebGL indisponible : l'application affiche le schéma hors connexion
+  }
+
+  function circle(lon, lat, r) {
+    var pts = [];
+    for (var i = 0; i <= 64; i++) {
+      var a = i / 64 * 2 * Math.PI;
+      pts.push([lon + r * Math.cos(a) / (111320 * Math.cos(lat * Math.PI / 180)), lat + r * Math.sin(a) / 110540]);
+    }
+    return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [pts] } };
+  }
+
+  function setAcc(a) {
+    accData = a;
+    if (!mapLoaded) return;
+    var src = map.getSource('acc');
+    if (src) src.setData(a ? { type: 'FeatureCollection', features: [circle(a.lon, a.lat, a.r)] } : emptyFC);
+  }
+
+  function setPickMode(on) {
+    picking = on;
+    if (map) map.getCanvas().style.cursor = on ? 'crosshair' : '';
+  }
+
+  function marker(html, lngLat, onClick) {
+    var el = document.createElement('div');          // le conteneur est positionné par MapLibre
+    el.innerHTML = html;
+    el.addEventListener('click', function (ev) { ev.stopPropagation(); onClick(); });
+    return new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
+  }
+
+  function setData(d) {
+    if (!map) return;
+    markers.forEach(function (m) { m.remove(); }); markers = []; inner = [];
+    if (me) { me.remove(); me = null; }
+    popup.remove();
+    var pts = [];
+    if (d.user) {
+      var u = [d.user.lon, d.user.lat];
+      me = marker('<div class="me"></div>', u, function () { go('tdapp://me'); });
+      pts.push(u);
+      setAcc(d.user.accuracy > 0 ? { lon: u[0], lat: u[1], r: Math.min(d.user.accuracy, 5000) } : null);
+    } else { setAcc(null); }
+    stops = d.stops;
+    d.stops.forEach(function (s) {
+      var p = [s.lon, s.lat];
+      var m = marker('<div class="stop">🚏</div>', p, function () { go('tdapp://stop/' + s.i); });
+      markers.push(m); inner.push(m.getElement().firstChild); pts.push(p);
+    });
+    bounds = null;
+    if (pts.length > 1) {
+      bounds = new maplibregl.LngLatBounds(pts[0], pts[0]);
+      pts.forEach(function (p) { bounds.extend(p); });
+      map.fitBounds(bounds, { padding: 70, maxZoom: 17, duration: 0 });
+    } else if (pts.length === 1) { map.jumpTo({ center: pts[0], zoom: 16 }); }
+    selectStop(d.selected, false);
+  }
+
+  function tip(lngLat, html) { popup.setLngLat(lngLat).setHTML(html).addTo(map); }
+
+  function selectMe(pan) {
+    if (!map || !me) return;
+    inner.forEach(function (e) { e.className = 'stop'; });
+    tip(me.getLngLat(), 'Vous êtes ici');
+    if (pan) map.easeTo({ center: me.getLngLat() });
+  }
+
+  function selectStop(i, pan) {
+    if (!map) return;
+    inner.forEach(function (e, k) { e.className = (k === i) ? 'stop sel' : 'stop'; });
+    var s = stops[i];
+    if (s) {
+      tip([s.lon, s.lat], '<b>' + esc(s.name) + '</b><br>' + esc(s.info));
+      if (pan) map.easeTo({ center: [s.lon, s.lat] });
+    } else { popup.remove(); }
+  }
+
+  function recenter() {
+    if (!map) return;
+    if (bounds) map.fitBounds(bounds, { padding: 70, maxZoom: 17 });
+    else if (me) map.easeTo({ center: me.getLngLat(), zoom: 16 });
+  }
+</script>
+</body>
+</html>
